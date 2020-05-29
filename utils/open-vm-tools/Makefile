@@ -23,6 +23,8 @@ PKG_FIXUP:=autoreconf
 PKG_LICENSE:=LGPL-2.1-or-later
 PKG_LICENSE_FILES:=LICENSE
 
+PKG_MAINTAINER:=Yuhei OKAWA <tochiro.srchack@gmail.com>, Kagurazaka Kotori <kagurazakakotori@gmail.com>
+
 include $(INCLUDE_DIR)/package.mk
 
 define Package/open-vm-tools
@@ -31,11 +33,22 @@ define Package/open-vm-tools
   DEPENDS:=@TARGET_x86 +glib2 +libpthread +libtirpc
   TITLE:=open-vm-tools
   URL:=https://github.com/vmware/open-vm-tools
-  MAINTAINER:=Yuhei OKAWA <tochiro.srchack@gmail.com>
 endef
 
-define Package/open-vm-tools-vm-tools/description
+define Package/open-vm-tools/description
 	Open Virtual Machine Tools for VMware guest OS
+endef
+
+define Package/vmhgfs-fuse
+  SECTION:=utils
+  CATEGORY:=Utilities
+  DEPENDS:=+open-vm-tools +libfuse
+  TITLE:=vmhgfs-fuse
+  URL:=https://github.com/vmware/open-vm-tools
+endef
+
+define Package/vmhgfs-fuse/description
+	VMware host guest filesystem (vmhgfs) utilities
 endef
 
 
@@ -73,14 +86,12 @@ define Package/open-vm-tools/install
 	$(INSTALL_DIR) $(1)/bin/
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/vmtoolsd $(1)/bin/
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/vmware-checkvm $(1)/bin/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/vmware-hgfsclient $(1)/bin/
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/vmware-namespace-cmd $(1)/bin/
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/vmware-rpctool $(1)/bin/
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/vmware-toolbox-cmd $(1)/bin/
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/vmware-xferlogs $(1)/bin/
 
 	$(INSTALL_DIR) $(1)/sbin/
-	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/mount.vmhgfs $(1)/sbin/
 	$(INSTALL_BIN) ./files/shutdown $(1)/sbin/
 
 	$(INSTALL_DIR) $(1)/lib/
@@ -89,7 +100,6 @@ define Package/open-vm-tools/install
 	$(CP) $(PKG_INSTALL_DIR)/usr/lib/libvmtools.so* $(1)/lib/
 
 	$(INSTALL_DIR) $(1)/usr/lib/open-vm-tools/plugins/common/
-	$(INSTALL_DATA) $(PKG_INSTALL_DIR)/usr/lib/open-vm-tools/plugins/common/libhgfsServer.so $(1)/usr/lib/open-vm-tools/plugins/common/
 	$(INSTALL_DATA) $(PKG_INSTALL_DIR)/usr/lib/open-vm-tools/plugins/common/libvix.so $(1)/usr/lib/open-vm-tools/plugins/common/
 
 	$(INSTALL_DIR) $(1)/usr/lib/open-vm-tools/plugins/vmsvc/
@@ -114,4 +124,18 @@ define Package/open-vm-tools/install
 	$(CP) $(PKG_INSTALL_DIR)/usr/share/open-vm-tools/messages/ja/vmtoolsd.vmsg $(1)/usr/share/open-vm-tools/messages/ja/
 endef
 
+define Package/vmhgfs-fuse/install
+	$(INSTALL_DIR) $(1)/bin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/vmware-hgfsclient $(1)/bin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/vmhgfs-fuse $(1)/bin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/bin/vmware-vmblock-fuse $(1)/bin/
+
+	$(INSTALL_DIR) $(1)/sbin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/sbin/mount.vmhgfs $(1)/sbin/
+
+	$(INSTALL_DIR) $(1)/usr/lib/open-vm-tools/plugins/common/
+	$(INSTALL_DATA) $(PKG_INSTALL_DIR)/usr/lib/open-vm-tools/plugins/common/libhgfsServer.so $(1)/usr/lib/open-vm-tools/plugins/common/
+endef
+
 $(eval $(call BuildPackage,open-vm-tools))
+$(eval $(call BuildPackage,vmhgfs-fuse))
